@@ -69,7 +69,8 @@ module flash (
       addr <= { addr[22:0], mosi };
   end
 
-  wire [31:0] data_bswap = {rdata[7:0], rdata[15:8], rdata[23:16], rdata[31:24]};
+  wire [31:0] data_bswap = rdata;
+  // wire [31:0] data_bswap = {rdata[7:0], rdata[15:8], rdata[23:16], rdata[31:24]};
   always@(posedge sck or posedge reset) begin
     if (reset) data <= 32'd0;
     else if (state == data_t) begin

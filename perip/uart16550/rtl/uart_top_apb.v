@@ -28,6 +28,7 @@ module uart_top_apb (
    wire [2:0] reg_adr;
    reg  [7:0] reg_dat8_w; // write to reg
    reg  [7:0] reg_dat8_w_reg;
+   reg  [2:0] reg_adr_r;
    wire [7:0] reg_dat8_r; // read from reg
    wire       rts_internal;
    assign     rtsn = ~rts_internal;
@@ -36,10 +37,27 @@ module uart_top_apb (
    assign in_pslverr = 1'b0;
    assign reg_we  = ~reset & in_psel & ~in_penable &  in_pwrite;
    assign reg_re  = ~reset & in_psel & ~in_penable & ~in_pwrite;
-   assign reg_adr = in_paddr[2:0]; //assign adr_o   = in_paddr[2:0];
+  //  assign reg_adr = in_paddr[2:0]; //assign adr_o   = in_paddr[2:0];
+  assign reg_adr = reg_adr_r;
+
+   always @(*) begin
+    if(in_paddr[1:0] == 2'b00) begin
+      case(in_pstrb)
+        4'b1000: reg_adr_r = 3'b011;
+        4'b0100: reg_adr_r = 3'b010;
+        4'b0010: reg_adr_r = 3'b001;
+        4'b0001: reg_adr_r = 3'b000;
+        default: reg_adr_r = 3'b000;
+      endcase
+    end
+    else begin
+      reg_adr_r = in_paddr[2:0];
+    end
+   end
+
    assign in_prdata  = (in_psel) ? {4{reg_dat8_r}} : 'h0;
-   always @ (in_paddr[1:0] or in_pwdata) begin
-             case (in_paddr[1:0])
+   always @ (reg_adr_r[1:0] or in_pwdata) begin
+             case (reg_adr_r[1:0])
              `ifdef ENDIAN_BIG
              2'b00: reg_dat8_w = #1 in_pwdata[31:24];
              2'b01: reg_dat8_w = #1 in_pwdata[23:16];

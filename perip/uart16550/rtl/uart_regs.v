@@ -410,9 +410,9 @@ always @(dl or dlab or ier or iir or scratch
             or lcr or lsr or msr or rf_data_out or wb_addr_i or wb_re_i)   // asynchrounous reading
 begin
     case (wb_addr_i)
-        `UART_REG_RB   : wb_dat_o = dlab ? dl[`UART_DL1] : rf_data_out[10:3];
-        `UART_REG_IE   : wb_dat_o = dlab ? dl[`UART_DL2] : {4'b0, ier};
-        `UART_REG_II   : wb_dat_o = {4'b1100,iir};
+        `UART_REG_RB   : wb_dat_o = dlab ? dl[`UART_DL1] : rf_data_out[10:3]; // receiver buffer
+        `UART_REG_IE   : wb_dat_o = dlab ? dl[`UART_DL2] : {4'b0, ier}; // Interrupt enable
+        `UART_REG_II   : wb_dat_o = {4'b1100,iir}; // 
         `UART_REG_LC   : wb_dat_o = lcr;
         `UART_REG_LS   : wb_dat_o = lsr;
         `UART_REG_MS   : wb_dat_o = msr;
@@ -492,7 +492,7 @@ always @(posedge clk or posedge wb_rst_i)
         dl[`UART_DL2] <= #1 8'b0;
     end
     else
-    if (wb_we_i && wb_addr_i==`UART_REG_IE)
+    if (wb_we_i && wb_addr_i==`UART_REG_IE) // Interrupt enable
         if (dlab)
         begin
             dl[`UART_DL2] <= #1 wb_dat_i;
@@ -543,7 +543,7 @@ always @(posedge clk or posedge wb_rst_i)
         start_dlc <= #1 1'b0;
     end
     else
-    if (wb_we_i && wb_addr_i==`UART_REG_TR)
+    if (wb_we_i && wb_addr_i==`UART_REG_TR) // transmitter
         if (dlab)
         begin
             dl[`UART_DL1] <= #1 wb_dat_i;
@@ -600,7 +600,7 @@ assign lsr1 = rf_overrun;     // Receiver overrun error
 assign lsr2 = rf_data_out[1]; // parity error bit
 assign lsr3 = rf_data_out[0]; // framing error bit
 assign lsr4 = rf_data_out[2]; // break error in the character
-assign lsr5 = (tf_count==5'b0 && thre_set_en);  // transmitter fifo is empty
+assign lsr5 = (tf_count==5'b0 && thre_set_en);  // transmitter fifo is full
 assign lsr6 = (tf_count==5'b0 && thre_set_en && (tstate == /*`S_IDLE */ 0)); // transmitter empty
 assign lsr7 = rf_error_bit | rf_overrun;
 

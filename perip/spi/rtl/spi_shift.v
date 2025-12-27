@@ -230,7 +230,7 @@ module spi_shift (clk, rst, latch, byte_sel, len, lsb, go,
 `endif
 `endif
     else
-      data[rx_bit_pos[`SPI_CHAR_LEN_BITS-1:0]] <= #Tp rx_clk ? s_in : data[rx_bit_pos[`SPI_CHAR_LEN_BITS-1:0]];
+      data[rx_bit_pos[`SPI_CHAR_LEN_BITS-1:0] - 1'b1] <= #Tp rx_clk ? s_in : data[rx_bit_pos[`SPI_CHAR_LEN_BITS-1:0] - 1'b1];
   end
 
 endmodule

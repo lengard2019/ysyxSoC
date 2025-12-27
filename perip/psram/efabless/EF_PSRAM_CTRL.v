@@ -60,14 +60,15 @@ module PSRAM_READER (
     localparam  IDLE = 1'b0,
                 READ = 1'b1;
 
-    wire [7:0]  FINAL_COUNT = 19 + size*2; // was 27: Always read 1 word
+    wire [7:0]  FINAL_COUNT = 13 + size*2; // was 27: Always read 1 word
 
     reg         state, nstate;
     reg [7:0]   counter;
     reg [23:0]  saddr;
-    reg [7:0]   data [3:0];
+    reg [3:0]   data [7:0];
 
     wire[7:0]   CMD_EBH = 8'heb;
+
 
     always @*
         case (state)
@@ -113,29 +114,30 @@ module PSRAM_READER (
             saddr <= {addr[23:0]};
 
     // Sample with the negedge of sck
-    wire[1:0] byte_index = {counter[7:1] - 8'd10}[1:0];
+    wire[2:0] byte_index = {counter - 8'd13}[2:0];
     always @ (posedge clk)
-        if(counter >= 20 && counter <= FINAL_COUNT)
+        if(counter >= 13 && counter <= FINAL_COUNT)
             if(sck)
-                data[byte_index] <= {data[byte_index][3:0], din}; // Optimize!
+                data[byte_index] <= din; // Optimize!
 
-    assign dout     =   (counter < 8)   ?   {3'b0, CMD_EBH[7 - counter]}:
-                        (counter == 8)  ?   saddr[23:20]        :
-                        (counter == 9)  ?   saddr[19:16]        :
-                        (counter == 10) ?   saddr[15:12]        :
-                        (counter == 11) ?   saddr[11:8]         :
-                        (counter == 12) ?   saddr[7:4]          :
-                        (counter == 13) ?   saddr[3:0]          :
+    assign dout     =   (counter == 0)   ?   {CMD_EBH[7:4]}:
+                        (counter == 1)   ?   {CMD_EBH[3:0]}:
+                        (counter == 2)  ?   saddr[23:20]        : // 先传高位
+                        (counter == 3)  ?   saddr[19:16]        :
+                        (counter == 4) ?   saddr[15:12]        :
+                        (counter == 5) ?   saddr[11:8]         :
+                        (counter == 6) ?   saddr[7:4]          :
+                        (counter == 7) ?   saddr[3:0]          :
                         4'h0;
 
-    assign douten   = (counter < 14);
+    assign douten   = (counter < 8);
 
-    assign done     = (counter == FINAL_COUNT+1);
+    assign done     = (counter == FINAL_COUNT);
 
     generate
         genvar i;
-        for(i=0; i<4; i=i+1)
-            assign line[i*8+7: i*8] = data[i];
+        for(i=0; i<8; i=i+1)
+            assign line[i*4+3: i*4] = data[i];
     endgenerate
 
 
@@ -161,7 +163,7 @@ module PSRAM_WRITER (
     localparam  IDLE = 1'b0,
                 WRITE = 1'b1;
 
-    wire[7:0]        FINAL_COUNT = 13 + size*2;
+    wire[7:0]        FINAL_COUNT = 7 + size*2;
 
     reg         state, nstate;
     reg [7:0]   counter;
@@ -212,25 +214,122 @@ module PSRAM_WRITER (
         else if((state == IDLE) && wr)
             saddr <= addr;
 
-    assign dout     =   (counter < 8)   ?   {3'b0, CMD_38H[7 - counter]}:
-                        (counter == 8)  ?   saddr[23:20]        :
-                        (counter == 9)  ?   saddr[19:16]        :
-                        (counter == 10) ?   saddr[15:12]        :
-                        (counter == 11) ?   saddr[11:8]         :
-                        (counter == 12) ?   saddr[7:4]          :
-                        (counter == 13) ?   saddr[3:0]          :
-                        (counter == 14) ?   line[7:4]           :
-                        (counter == 15) ?   line[3:0]           :
-                        (counter == 16) ?   line[15:12]         :
-                        (counter == 17) ?   line[11:8]          :
-                        (counter == 18) ?   line[23:20]         :
-                        (counter == 19) ?   line[19:16]         :
-                        (counter == 20) ?   line[31:28]         :
-                        line[27:24];
+    assign dout     =   (counter == 0)   ?   { CMD_38H[7:4]}:
+                        (counter == 1)   ?   { CMD_38H[3:0]}:
+                        (counter == 2)  ?   saddr[23:20]        :
+                        (counter == 3)  ?   saddr[19:16]        :
+                        (counter == 4) ?   saddr[15:12]        :
+                        (counter == 5) ?   saddr[11:8]         :
+                        (counter == 6) ?   saddr[7:4]          :
+                        (counter == 7) ?   saddr[3:0]          :
+                        // (counter == 14) ?   line[7:4]           :
+                        // (counter == 15) ?   line[3:0]           :
+                        // (counter == 16) ?   line[15:12]         :
+                        // (counter == 17) ?   line[11:8]          :
+                        // (counter == 18) ?   line[23:20]         :
+                        // (counter == 19) ?   line[19:16]         :
+                        // (counter == 20) ?   line[31:28]         :
+                        // line[27:24];
+                        (counter == 8) ?   line[3:0]           : // 先传低位
+                        (counter == 9) ?   line[7:4]           :
+                        (counter == 10) ?   line[11:8]           :
+                        (counter == 11) ?   line[15:12]         :
+                        (counter == 12) ?   line[19:16]         :
+                        (counter == 13) ?   line[23:20]         :
+                        (counter == 14) ?   line[27:24]         :
+                        line[31:28];
+
 
     assign douten   = (~ce_n);
 
     assign done     = (counter == FINAL_COUNT + 1);
 
+
+endmodule
+
+
+// Using aaH Command
+module PSRAM_SWITCH (
+    input   wire            clk,
+    input   wire            rst_n,
+    // input   wire [23:0]     addr,
+    // input   wire [31: 0]    line,
+    // input   wire [2:0]      size,
+    // input   wire            wr,
+    // output  wire            done,
+
+    output  reg             sck,
+    output  reg             ce_n,
+    // input   wire [3:0]      din,
+    output  wire [3:0]      dout,
+    output  wire            douten
+);
+
+    localparam  IDLE = 2'b00,
+                SWITCH = 2'b01,
+                SW_END = 2'b11;
+
+    wire[7:0]   FINAL_COUNT = 15;
+
+    wire    done;
+
+    reg [1:0]   state, nstate;
+    reg [7:0]   counter;
+    // reg [23:0]  saddr;
+    //reg [7:0]   data [3:0];
+
+    wire[7:0]   CMD_AAH = 8'haa;
+
+    always @*
+        case (state)
+            IDLE: if(rst_n) nstate = SWITCH; else nstate = IDLE;
+            SWITCH: if(done) nstate = SW_END; else nstate = SWITCH;
+            SW_END: nstate = SW_END;
+            default : nstate = SW_END;
+        endcase
+
+    always @ (posedge clk or negedge rst_n)
+        if(!rst_n) state <= IDLE;
+        else state <= nstate;
+
+    // Drive the Serial Clock (sck) @ clk/2
+    always @ (posedge clk or negedge rst_n)
+        if(!rst_n)
+            sck <= 1'b0;
+        else if(~ce_n)
+            sck <= ~ sck;
+        else if(state != SWITCH)
+            sck <= 1'b0;
+
+    // ce_n logic
+    always @ (posedge clk or negedge rst_n)
+        if(!rst_n)
+            ce_n <= 1'b1;
+        else if(state == SWITCH)
+            ce_n <= 1'b0;
+        else
+            ce_n <= 1'b1;
+
+    always @ (posedge clk or negedge rst_n)
+        if(!rst_n)
+            counter <= 8'b0;
+        else if(sck & ~done)
+            counter <= counter + 1'b1;
+        else if(state != SWITCH)
+            counter <= 8'b0;
+
+    // always @ (posedge clk or negedge rst_n)
+    //     if(!rst_n)
+    //         saddr <= 24'b0;
+    //     else if((state == IDLE) && wr)
+    //         saddr <= addr;
+
+    assign dout     =   (counter < 8)   ?   {3'b0, CMD_AAH[7 - counter]}:
+                        4'b0000;
+
+
+    assign douten   = (~ce_n);
+
+    assign done     = (counter == FINAL_COUNT + 1);
 
 endmodule

@@ -1,6 +1,6 @@
 // define this macro to enable fast behavior simulation
 // for flash by skipping SPI transfers
-//`define FAST_FLASH
+// `define FAST_FLASH
 
 module spi_top_apb #(
   parameter flash_addr_start = 32'h30000000,
@@ -48,25 +48,67 @@ assign in_prdata  = data[31:0];
 
 `else
 
+
+  wire  [4:0]         wb_adr_i;
+  wire  [31:0]        wb_dat_i;
+  wire  [31:0]        wb_dat_o;
+  wire  [3:0]         wb_sel_i;
+  wire                wb_we_i;
+  wire                wb_stb_i;
+  wire                wb_cyc_i;
+  wire                wb_ack_o;
+  wire                wb_err_o;
+  wire                wb_int_o;
+
+  // wire  [7:0]         ss_pad_o;
+
 spi_top u0_spi_top (
   .wb_clk_i(clock),
   .wb_rst_i(reset),
-  .wb_adr_i(in_paddr[4:0]),
-  .wb_dat_i(in_pwdata),
-  .wb_dat_o(in_prdata),
-  .wb_sel_i(in_pstrb),
-  .wb_we_i (in_pwrite),
-  .wb_stb_i(in_psel),
-  .wb_cyc_i(in_penable),
-  .wb_ack_o(in_pready),
-  .wb_err_o(in_pslverr),
-  .wb_int_o(spi_irq_out),
-
+  .wb_adr_i(wb_adr_i),
+  .wb_dat_i(wb_dat_i),
+  .wb_dat_o(wb_dat_o),
+  .wb_sel_i(wb_sel_i),
+  .wb_we_i (wb_we_i),
+  .wb_stb_i(wb_stb_i),
+  .wb_cyc_i(wb_cyc_i),
+  .wb_ack_o(wb_ack_o),
+  .wb_err_o(wb_err_o),
+  .wb_int_o(wb_int_o),
   .ss_pad_o(spi_ss),
   .sclk_pad_o(spi_sck),
   .mosi_pad_o(spi_mosi),
   .miso_pad_i(spi_miso)
 );
+
+
+  XIP u_xip(
+    .clk                (clock      ),
+    .reset              (reset      ),
+    .in_paddr           (in_paddr),   
+    .in_psel            (in_psel),  
+    .in_penable         (in_penable),     
+    .in_pprot           (in_pprot),   
+    .in_pwrite          (in_pwrite),    
+    .in_pwdata          (in_pwdata),    
+    .in_pstrb           (in_pstrb),   
+    .in_pready          (in_pready    ),    
+    .in_prdata          (in_prdata    ),    
+    .in_pslverr         (in_pslverr   ),
+    
+    .wb_adr_i           (wb_adr_i     ),  
+    .wb_dat_i           (wb_dat_i     ),  
+    .wb_dat_o           (wb_dat_o     ),  
+    .wb_sel_i           (wb_sel_i     ),  
+    .wb_we_i            (wb_we_i      ), 
+    .wb_stb_i           (wb_stb_i     ),  
+    .wb_cyc_i           (wb_cyc_i     ),  
+    .wb_ack_o           (wb_ack_o     ),  
+    .wb_err_o           (wb_err_o     ),  
+    .wb_int_o           (wb_int_o     ),
+    .ss_pad_o           (spi_ss)
+  );
+
 
 `endif // FAST_FLASH
 
