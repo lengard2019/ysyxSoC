@@ -17,6 +17,8 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 YSYXC_PATH = /home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include
 
+STA_HOME = /home/dengzibin/yosys-sta
+
 default: $(BIN)
  
 $(shell mkdir -p $(BUILD_DIR))
@@ -30,12 +32,17 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 FIRTOOL_VERSION = 1.105.0
 FIRTOOL_PATCH_DIR = $(shell pwd)/patch/firtool
 
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v")
+VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.vh")
 VSRCS += $(shell find $(abspath ./perip) -name "*.v")
 VSRCS += $(shell find $(abspath ./build) -name "*.v")
+RTL_FILE = "$(shell find $(abspath ./vsrc) -name "*.v")"
 CSRCS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCSS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCSS += $(SRC_AUTO_BIND)
+
+SDC_FILE = /home/dengzibin/ysyx-workbench/ysyxSoC/sdc/cpu_top.sdc
+RESULT_DIR = /home/dengzibin/ysyx-workbench/ysyxSoC/sta_result
+DESIGN = cpu_top
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
@@ -59,7 +66,7 @@ $(V_FILE_FINAL): $(SCALA_FILES)
 	sed -i -e 's/_\(aw\|ar\|w\|r\|b\)_\(\|bits_\)/_\1/g' $@
 	sed -i '/firrtl_black_box_resource_files.f/, $$d' $@
 
-$(BIN): $(VSRCS) $(CSRCSS) $(NVBOARD_ARCHIVE)
+$(BIN): $(VSRCS) $(CSRCS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
 		--top-module $(TOPNAME) $^ \
@@ -76,7 +83,7 @@ dev-init:
 	cd rocket-chip && git apply ../patch/rocket-chip.patch
 
 run:
-	verilator -Wno-fatal --cc $(VSRCS) --exe $(CSRCS) -LDFLAGS -lreadline -CFLAGS "-I/home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include" \
+	verilator -Wno-fatal --cc $(VSRCS) -I./vsrc/ --exe $(CSRCS) -LDFLAGS -lreadline -CFLAGS "-I/home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include" \
 		--top-module ysyxSoCFull --trace-fst --timescale "1ns/1ns" --autoflush --no-timing +incdir+./perip/uart16550/rtl +incdir+./perip/spi/rtl
 	make -C obj_dir -f VysyxSoCFull.mk VysyxSoCFull
 	./obj_dir/VysyxSoCFull $(ARGS) $(IMG)
@@ -84,5 +91,8 @@ run:
 nvboard: $(BIN)
 	@$^ $(ARGS) $(IMG)
 
+sta: 
+	make -C $(STA_HOME) sta DESIGN=$(DESIGN) SDC_FILE=$(SDC_FILE) CLK_FREQ_MHZ=800 CLK_PORT_NAME=clock \
+		O=$(RESULT_DIR) RTL_FILES=$(RTL_FILE)
 
 .PHONY: verilog clean dev-init

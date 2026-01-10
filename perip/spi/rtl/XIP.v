@@ -152,7 +152,7 @@ module XIP( // APB转SPI
     always @(*) begin
         case(current_state)
             SPI_TX0:  wb_dat_r     = spi_cmd;       // 0
-            SPI_DIV:  wb_dat_r     = 32'h00000004;  // 
+            SPI_DIV:  wb_dat_r     = 32'h00000000;  // 
             SPI_SS:   wb_dat_r     = 32'h00000001;
             SPI_CTRL: wb_dat_r     = 32'h00002740;
             default:  wb_dat_r     = 32'h00000000;

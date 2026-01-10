@@ -1,2 +1,7 @@
 build/
 out/
+*.vcd
+*.fst
+obj_dir/
+sta_result/
+sdc/

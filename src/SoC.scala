@@ -33,7 +33,7 @@ class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
 
   val luart = LazyModule(new APBUart16550(AddressSet.misaligned(0x10000000, 0x1000)))
   val lgpio = LazyModule(new APBGPIO(AddressSet.misaligned(0x10002000, 0x10)))
-  val lclint = LazyModule(new APBCLINT(AddressSet.misaligned(0x02000000, 0x10)))
+  // val lclint = LazyModule(new APBCLINT(AddressSet.misaligned(0x02000000, 0x10)))
   val lkeyboard = LazyModule(new APBKeyboard(AddressSet.misaligned(0x10011000, 0x8)))
   val lvga = LazyModule(new APBVGA(AddressSet.misaligned(0x21000000, 0x200000)))
   val lspi  = LazyModule(new APBSPI(
@@ -48,7 +48,7 @@ class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
   val lsdram_apb = if (!Config.sdramUseAXI) Some(LazyModule(new APBSDRAM (sdramAddressSet))) else None
   val lsdram_axi = if ( Config.sdramUseAXI) Some(LazyModule(new AXI4SDRAM(sdramAddressSet))) else None
 
-  List(lspi.node, luart.node, lpsram.node, lgpio.node, lclint.node, lkeyboard.node, lvga.node).map(_ := apbxbar)
+  List(lspi.node, luart.node, lpsram.node, lgpio.node, lkeyboard.node, lvga.node).map(_ := apbxbar)
   List(apbxbar := APBDelayer() := AXI4ToAPB() := AXI4Buffer(), lmrom.node, sramNode).map(_ := xbar2)
   xbar2 := AXI4UserYanker(Some(1)) := AXI4Fragmenter() := xbar
   if (Config.sdramUseAXI) lsdram_axi.get.node := ysyx.AXI4Delayer() := xbar
@@ -89,7 +89,7 @@ class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
     val psram = IO(chiselTypeOf(lpsram.module.qspi_bundle))
     val sdram = IO(chiselTypeOf(sdramBundle))
     val gpio = IO(chiselTypeOf(lgpio.module.gpio_bundle))
-    val clint = IO(chiselTypeOf(lclint.module.clint_bundle))
+    // val clint = IO(chiselTypeOf(lclint.module.clint_bundle))
     val ps2 = IO(chiselTypeOf(lkeyboard.module.ps2_bundle))
     val vga = IO(chiselTypeOf(lvga.module.vga_bundle))
     uart <> luart.module.uart
@@ -97,7 +97,7 @@ class ysyxSoCASIC(implicit p: Parameters) extends LazyModule {
     psram <> lpsram.module.qspi_bundle
     sdram <> sdramBundle
     gpio <> lgpio.module.gpio_bundle
-    clint <> lclint.module.clint_bundle
+    // clint <> lclint.module.clint_bundle
     ps2 <> lkeyboard.module.ps2_bundle
     vga <> lvga.module.vga_bundle
   }
@@ -150,13 +150,13 @@ class ysyxSoCFull(implicit p: Parameters) extends LazyModule {
 
     val externalPins = IO(new Bundle{
       val gpio = chiselTypeOf(masic.gpio)
-      val clint = chiselTypeOf(masic.clint)
+      // val clint = chiselTypeOf(masic.clint)
       val ps2 = chiselTypeOf(masic.ps2)
       val vga = chiselTypeOf(masic.vga)
       val uart = chiselTypeOf(masic.uart)
     })
     externalPins.gpio <> masic.gpio
-    externalPins.clint <> masic.clint
+    // externalPins.clint <> masic.clint
     externalPins.ps2 <> masic.ps2
     externalPins.vga <> masic.vga
     externalPins.uart <> masic.uart

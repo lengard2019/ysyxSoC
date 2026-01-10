@@ -5,12 +5,13 @@
 #include "VysyxSoCFull___024root.h"
 #include "VysyxSoCFull__Dpi.h"
 
-// #ifdef CONFIG_NVBOARD
+#ifdef CONFIG_NVBOARD
 #include <nvboard.h>
-// #endif
+#endif
 
 #include <mrom.h>
 #include <cpu/ftrace.h>
+#include <npc_counter.h>
 #include <common.h>
 #include <locale.h>
 #include <cpu/cpu.h>
@@ -37,6 +38,7 @@ static uint32_t abort_count = 0;
 static bool fst_trace_start = true;
 
 uint64_t g_nr_guest_inst = 0;
+uint64_t g_nr_cycle = 0;
 static uint64_t g_timer = 0; // unit: us
 // static uint64_t timer_start = 0;
 // static uint64_t timer_end = 0;
@@ -210,6 +212,7 @@ static void statistic() {
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
   Log("host time spent = " NUMBERIC_FMT " us", g_timer);
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
+  Log("cycles per instructions = " NUMBERIC_FMT " cycles/inst", g_nr_cycle/g_nr_guest_inst);
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
@@ -240,32 +243,45 @@ static void npc_once(){
     // if(difftest_skip_first == true){// 跳过第一次difftest
       // printf("pc = %08x, Next_pc = %08x\n", top->pc, top->Next_pc);
       g_nr_guest_inst ++;
-      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_LSU_ysyx__DOT__Next_pc_r, inst_pre);
-    }
-    else{
-    }
+      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_pre);
+  }
+  else{
+  }
+
+  // if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_EXU_ysyx__DOT__current_state == 0){
+  //   // if(difftest_skip_first == true){// 跳过第一次difftest
+  //     // printf("pc = %08x, Next_pc = %08x\n", top->pc, top->Next_pc);
+  //     g_nr_guest_inst ++;
+  //     trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_pre);
+  // }
 
 
   if(inst_pre == inst_now){
     abort_count ++;
   }
   else{
+    int type = type_of_inst();
+    cycle_add(type, abort_count);
     abort_count = 0;
   }
   
   step_and_dump_wave();  // 下降沿
+
+  g_nr_cycle ++ ;
 
   // if(cpu_state() == 0xa0000370) {
   //   fst_trace_start = true;
   // }
 
   if(abort_count >= 20000){ // 保护
+    printf("overtime\n");
     npc_state.state = NPC_ABORT;
     npc_state.halt_pc = cpu_state();
     npc_state.halt_ret = get_reg(10);
   }
 
   if(ebreak == true){
+    display_counter();
     npc_state.state = NPC_END;
     npc_state.halt_pc = cpu_state();
     npc_state.halt_ret = get_reg(10);
