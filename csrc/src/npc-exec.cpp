@@ -212,7 +212,7 @@ static void statistic() {
 #define NUMBERIC_FMT MUXDEF(CONFIG_TARGET_AM, "%", "%'") PRIu64
   Log("host time spent = " NUMBERIC_FMT " us", g_timer);
   Log("total guest instructions = " NUMBERIC_FMT, g_nr_guest_inst);
-  // Log("cycles per instructions = " NUMBERIC_FMT " cycles/inst", g_nr_cycle/g_nr_guest_inst);
+  if (g_nr_guest_inst > 0) Log("cycles per instructions = " NUMBERIC_FMT " cycles/inst", g_nr_cycle/g_nr_guest_inst);
   if (g_timer > 0) Log("simulation frequency = " NUMBERIC_FMT " inst/s", g_nr_guest_inst * 1000000 / g_timer);
   else Log("Finish running in less than 1 us and can not calculate the simulation frequency");
 }
@@ -281,7 +281,12 @@ static void npc_once(){
   }
 
   if(ebreak == true){
+#ifdef CONFIG_COUNTER
     display_counter();
+#endif
+#ifdef CONFIG_AMAT
+    display_amat();
+#endif
     npc_state.state = NPC_END;
     npc_state.halt_pc = cpu_state();
     npc_state.halt_ret = get_reg(10);

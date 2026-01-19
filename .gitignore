@@ -5,3 +5,4 @@ out/
 obj_dir/
 sta_result/
 sdc/
+vsrc/npc_config.vh

@@ -9,4 +9,6 @@ int type_of_inst();
 
 void display_counter();
 
+void display_amat();
+
 #endif
