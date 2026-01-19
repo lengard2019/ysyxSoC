@@ -6,3 +6,4 @@ obj_dir/
 sta_result/
 sdc/
 vsrc/npc_config.vh
+csrc/inlude/config.h
