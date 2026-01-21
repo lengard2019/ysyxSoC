@@ -19,6 +19,7 @@
 #include <cpu/cpu.h>
 #include <paddr.h>
 #include <utils.h>
+#include <flash.h>
 // #include <difftest-def.h>
 
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
@@ -116,7 +117,8 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
       "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
 
   ref_difftest_init(port);
-  ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size, DIFFTEST_TO_REF);
+  printf("120 mark\n");
+  ref_difftest_memcpy(0x30000000, guest_to_host_flash(0x0), img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }
 

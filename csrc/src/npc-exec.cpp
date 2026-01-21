@@ -239,14 +239,17 @@ static void npc_once(){
 
   IFDEF(CONFIG_DIFFTEST, state_copy());
   // state_copy();
-  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_EXU_ysyx__DOT__current_state == 0){
-    // if(difftest_skip_first == true){// 跳过第一次difftest
+  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__current_state == 0){ // or EXU finish one inst
+    if(difftest_skip_first == true){// 跳过第一次difftest
       // printf("pc = %08x, Next_pc = %08x\n", top->pc, top->Next_pc);
-      g_nr_guest_inst ++;
-      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_pre);
+      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_now);
+    }
+    else{
+      difftest_skip_first = true;
+    }
+    g_nr_guest_inst ++;
   }
-  else{
-  }
+  
 
   // if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_EXU_ysyx__DOT__current_state == 0){
   //   // if(difftest_skip_first == true){// 跳过第一次difftest
