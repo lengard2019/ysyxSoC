@@ -74,6 +74,16 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
+#ifdef CONFIG_DIFFTEST
+extern "C" svBit in_mem(int addr){
+  uint32_t addr_r = (uint32_t)addr;
+  if(((addr >= 0x30000000) && (addr < 0x31000000)) || ((addr >= 0xa0000000) && (addr < 0xa4000000))){
+    return 0;
+  }
+  return 1;
+}
+#endif
+
 void step_and_dump_wave(){
     top->clock = !top->clock; // 翻转时钟
     top->eval();

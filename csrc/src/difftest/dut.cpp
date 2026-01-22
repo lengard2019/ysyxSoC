@@ -20,6 +20,9 @@
 #include <paddr.h>
 #include <utils.h>
 #include <flash.h>
+#include "svdpi.h"
+#include "VysyxSoCFull__Dpi.h"
+#include <cpu/difftest.h>
 // #include <difftest-def.h>
 
 void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction) = NULL;
@@ -57,7 +60,7 @@ bool isa_difftest_checkregs(NPC_state *ref_r, vaddr_t pc) {
 
 // this is used to let ref skip instructions which
 // can not produce consistent behavior with NEMU
-void difftest_skip_ref() {
+extern "C" void difftest_skip_ref() {
   is_skip_ref = true;
   // If such an instruction is one of the instruction packing in QEMU
   // (see below), we end the process of catching up with QEMU's pc to
@@ -117,7 +120,6 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
       "If it is not necessary, you can turn it off in menuconfig.", ref_so_file);
 
   ref_difftest_init(port);
-  printf("120 mark\n");
   ref_difftest_memcpy(0x30000000, guest_to_host_flash(0x0), img_size, DIFFTEST_TO_REF);
   ref_difftest_regcpy(&cpu, DIFFTEST_TO_REF);
 }

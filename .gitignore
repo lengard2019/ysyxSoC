@@ -2,6 +2,7 @@ build/
 out/
 *.vcd
 *.fst
+*.fst.hier
 obj_dir/
 sta_result/
 sdc/
