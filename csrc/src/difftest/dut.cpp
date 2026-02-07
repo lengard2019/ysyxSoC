@@ -41,7 +41,7 @@ static int skip_dut_nr_inst = 0;
 
 bool isa_difftest_checkregs(NPC_state *ref_r, vaddr_t pc) {
 
-  // printf("%08x %08x %08x\n", pc, ref_r->pc, cpu.pc);
+  // log_write("%08x %08x %08x\n", pc, ref_r->pc, cpu.pc);
   if(cpu.pc != ref_r->pc){
     printf("41 %08x, %08x\n", cpu.pc, ref_r->pc);
     return false;
@@ -70,6 +70,7 @@ extern "C" void difftest_skip_ref() {
   // will load that memory, we will encounter false negative. But such
   // situation is infrequent.
   skip_dut_nr_inst = 0;
+  // printf("73 skip\n");
 }
 
 // void difftest_skip_load() {

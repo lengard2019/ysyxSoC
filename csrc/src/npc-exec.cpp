@@ -44,9 +44,9 @@ static uint64_t g_timer = 0; // unit: us
 // static uint64_t timer_end = 0;
 
 static bool g_print_step = false;
-#ifdef CONFIG_DIFFTEST
+// #ifdef CONFIG_DIFFTEST
 static bool difftest_skip_first = false;
-#endif
+// #endif
 
 VerilatedContext* contextp = NULL;
 #ifdef CONFIG_VCD_TRACE
@@ -157,7 +157,7 @@ void exit_npc(){
 
 /*reg function*/
 static inline int check_reg_idx(int idx) {
-  IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < 32));
+  IFDEF(CONFIG_RT_CHECK, assert(idx >= 0 && idx < 16));
   return idx;
 }
 
@@ -249,15 +249,17 @@ static void npc_once(){
 
   IFDEF(CONFIG_DIFFTEST, state_copy());
   // state_copy();
-  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__current_state == 0){ // or EXU finish one inst
+  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__current_state == 1){ // or EXU finish one inst
     if(difftest_skip_first == true){// 跳过第一次difftest
+      // IFDEF(CONFIG_DIFFTEST, state_copy());
       // printf("pc = %08x, Next_pc = %08x\n", top->pc, top->Next_pc);
-      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_now);
+      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r, inst_now);
     }
     else{
       difftest_skip_first = true;
     }
     g_nr_guest_inst ++;
+    // printf("262 %d\n", g_nr_guest_inst);
   }
   
 

@@ -43,7 +43,7 @@ extern "C" void sdram0_read(char bank, short row, short col, int *data){
         // printf("read %08x, %08x\n", addr, temp);
         temp = sdram[temp_bank][temp_col][temp_row];
         *data = (int)temp;
-        // printf("read %04x, %04x, %04x\n", temp_col, temp_row, temp);
+        // printf("read %04x, %04x, %08x\n", temp_col, temp_row, temp);
     }
     else{
       printf("%04x, %04x, %04x\n", temp_bank, temp_col, temp_row);
@@ -65,7 +65,7 @@ extern "C" void sdram0_write(char bank, short row, short col, char mask, int dat
     if(mask == 0x00){
 
       sdram[temp_bank][temp_col][temp_row] = temp_data;
-      // printf("write %04x, %04x, %04x, %08x\n", temp_col, temp_row, (uint32_t)temp_data);
+      // printf("write %04x, %04x, %04x, %08x\n", temp_bank, temp_col, temp_row, (uint32_t)temp_data);
     }
     else if(mask == 0x0E){ // 1110
       sdram[temp_bank][temp_col][temp_row] = (sdram[temp_bank][temp_col][temp_row] & 0xFFFFFF00) | (temp_data & 0x000000FF);

@@ -303,7 +303,7 @@ wire read_prio_w    = ((!req_prio_q & !req_hold_wr_q) | req_hold_rd_q);
 wire write_active_w  = (axi_awvalid_i || req_wr_q) && !req_rd_q && req_fifo_accept_w && (write_prio_w || req_wr_q || !axi_arvalid_i);
 wire read_active_w   = (axi_arvalid_i || req_rd_q) && !req_wr_q && req_fifo_accept_w && (read_prio_w || req_rd_q || !axi_awvalid_i);
 
-assign axi_awready_o = write_active_w && !req_wr_q && ram_accept_i && req_fifo_accept_w;
+assign axi_awready_o = write_active_w && !req_wr_q && req_fifo_accept_w;
 assign axi_wready_o  = write_active_w &&              ram_accept_i && req_fifo_accept_w;
 assign axi_arready_o = read_active_w  && !req_rd_q && ram_accept_i && req_fifo_accept_w;
 

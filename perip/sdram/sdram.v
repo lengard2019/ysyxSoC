@@ -25,14 +25,13 @@ module sdram(
   reg   [12:0]    mode_reg;
 
   reg   [31:0]    data;
-  reg   [31:0]    data_wr;
+  wire  [31:0]    data_wr;
 
   reg   [3:0]     mode;
 
-  reg   [3:0]     mask;
+  wire   [3:0]    mask;
 
-  reg            wen;
-  wire            ren;
+  assign  mask  = dqm;
 
   assign mode = {cs, ras, cas, we};
 
@@ -42,13 +41,13 @@ module sdram(
   reg   [2:0]     latency_cnt;
   reg   [3:0]     burst_cnt;
 
-  reg   [1:0]     bank;
-  reg   [15:0]    col;
+  wire  [1:0]     bank;
+  wire  [15:0]    col;
 
   reg   [15:0]    row_0;
   reg   [15:0]    row_1;
   reg   [15:0]    row_2;
-  reg   [15:0]    row_3; 
+  reg   [15:0]    row_3;
   reg   [15:0]    row;
   // reg   [15:0]    row_r;
 
@@ -82,15 +81,6 @@ module sdram(
     end
     else begin
       case(state)
-        // IDLE: begin
-        //   if(mode == 4'b0011) begin
-        //     state   <= ACTIVE;
-        //   end
-
-        //   else begin
-        //     state   <= IDLE;
-        //   end
-        // end
 
         IDLE: begin
           if(mode == 4'b0101) begin // read
@@ -169,15 +159,15 @@ module sdram(
   always @(posedge clk or negedge cke) begin // write
     if(!cke) begin
       // row   <= 16'h0000;
-      data_wr <= 32'h0000;
+      // data_wr <= 32'h0000;
       burst_cnt <= 4'h0;
       latency_cnt <= 3'b000;
-      bank    <= 2'b00;
+      // bank    <= 2'b00;
       // ren   <= 1'b0;
-      wen   <= 1'b0;
-      mask  <= 4'b0000;
-      bank  <= 2'b00;
-      col   <= 16'h0000;
+      // wen   <= 1'b0;
+      // mask  <= 4'b0000;
+      // bank  <= 2'b00;
+      // col   <= 16'h0000;
     end
     else begin
       // if(mode == 4'b0011) begin // active
@@ -185,28 +175,28 @@ module sdram(
       //   // row   <= {3'b000, a};
       // end
       if(mode == 4'b0100) begin // write
-        col     <= {3'b000, a};
+        // col     <= {3'b000, a};
         burst_cnt   <= burst_cnt + 1;
-        data_wr <= dq;
-        wen     <= 1'b1;
+        // data_wr <= dq;
+        // wen     <= 1'b1;
         // ren   <= 1'b0;
-        bank    <= ba;
-        mask  <= dqm;
+        // bank    <= ba;
+        // mask  <= dqm;
       end
       else if(mode == 4'b0101) begin // read
-        col   <= {3'b000, a};
+        // col   <= {3'b000, a};
         latency_cnt <= latency_cnt + 1;
         burst_cnt   <= burst_cnt + 1;
-        wen   <= 1'b0;
-        bank  <= ba;
+        // wen   <= 1'b0;
+        // bank  <= ba;
         // col   <= {3'b000, a};
       end
       else if(mode == 4'b0111 && state == WRITE_BURST) begin // NOP
         burst_cnt   <= burst_cnt + 1;
-        col         <= col + 1;
-        data_wr     <= dq;
-        wen   <= 1'b0;
-        mask  <= dqm;
+        // col         <= col + 1;
+        // data_wr     <= dq;
+        // wen   <= 1'b0;
+        // mask  <= dqm;
       end
       else if(mode == 4'b0111 && state == READ_LATENCY) begin
         latency_cnt <= latency_cnt + 1;
@@ -214,30 +204,47 @@ module sdram(
       end
       else if(mode == 4'b0111 && state == READ_BURST) begin
         burst_cnt   <= burst_cnt + 1;
-        col         <= col + 1;
+        // col         <= col + 1;
         // ren         <= 1'b1;
       end
       else begin
         burst_cnt   <= 4'h0;
         latency_cnt <= 3'b000;
         // ren   <= 1'b0;
-        wen     <= 1'b0;
+        // wen     <= 1'b0;
       //   bank    <= 2'b00;
       //   col     <= 16'h0000;
       end
     end
   end
 
+  // reg   [31:0] data_out;
+
+  // wire  [31:0] data_out_w;
+  // assign  data_out_w  = data_out;
+
+  // always @(posedge clk or negedge cke) begin
+  //   if(!cke) begin
+  //     data_out    <= 32'h0000;
+  //   end
+  //   else begin
+  //     data_out    <= data;
+  //   end
+  // end
+
+  assign  bank  = ba;
+  assign  col   = (mode == 4'b0100 || mode == 4'b0101) ? {3'b000, a} : 16'h0000;
+
   // assign wen = (mode == 4'b0100) ? 1'b1 : 1'b0;
 
-  assign  ren = (state == READ_BURST) ? 1'b1 : 1'b0;
+  // assign  ren = (state == READ_BURST) ? 1'b1 : 1'b0;
+  // assign  wen = (state == WRITE_BURST);
 
-  assign  dq = (ren == 1'b1) ? data : 32'bz;
-
+  assign  dq = (mode == 4'b0100) ? 32'bz : data;
+  assign  data_wr = (mode == 4'b0100) ? dq : 32'b0;
   sdram_cmd sdram_cmd_i(
     .clock        (clk      ),
-    .ren          (ren      ),
-    .wen          (wen      ),
+    .mode         (mode     ),
     .bank         (bank     ),
     .mask         (mask     ),
     .col          (col      ),
@@ -253,8 +260,9 @@ import "DPI-C" function void sdram0_write(input byte bank, input shortint row, i
 
 module sdram_cmd(
     input               clock,
-    input               ren,
-    input               wen,
+    // input               ren,
+    // input               wen,
+    input       [3:0]   mode,
     input       [3:0]   mask,
     input       [1:0]   bank,
     input       [15:0]  col, 
@@ -263,17 +271,14 @@ module sdram_cmd(
     output reg  [31:0]  data
   );
 
-  always@(*) begin // read
-    if (ren) begin 
+  always@(posedge clock) begin // read
+    if (mode == 4'b0101) begin 
       sdram0_read({6'b000000, bank}, row, col, data);
-    end
-    else begin
-      data = 32'h0000;
     end
   end
 
   always @(posedge clock) begin // write
-    if(wen) begin
+    if(mode == 4'b0100) begin
       sdram0_write({6'b000000, bank}, row, col, {4'b0000, mask}, data_wr);
     end
   end

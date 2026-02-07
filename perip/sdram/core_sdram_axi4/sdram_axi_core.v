@@ -70,7 +70,7 @@ module sdram_axi_core
 parameter SDRAM_MHZ              = 50;
 parameter SDRAM_ADDR_W           = 25;
 parameter SDRAM_COL_W            = 10; 
-parameter SDRAM_READ_LATENCY     = 2; // 可在模块梨花
+parameter SDRAM_READ_LATENCY     = 1;
 
 //-----------------------------------------------------------------
 // Defines / Local params
@@ -134,7 +134,7 @@ wire          ram_ack_w;
 
 wire          ram_req_w = (ram_wr_w != 4'b0) | ram_rd_w;
 
-assign inport_ack_o       = ram_ack_w;
+assign inport_ack_o       = ram_ack_w && (dqm_q != 4'hf);
 assign inport_read_data_o = ram_read_data_w;
 assign inport_error_o     = 1'b0;
 assign inport_accept_o    = ram_accept_w;
