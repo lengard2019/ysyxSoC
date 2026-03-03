@@ -43,12 +43,12 @@ bool isa_difftest_checkregs(NPC_state *ref_r, vaddr_t pc) {
 
   // log_write("%08x %08x %08x\n", pc, ref_r->pc, cpu.pc);
   if(cpu.pc != ref_r->pc){
-    printf("41 %08x, %08x\n", cpu.pc, ref_r->pc);
+    printf("pc %08x, %08x\n", cpu.pc, ref_r->pc);
     return false;
   }
   for (int i = 0; i < 16; i++) {
     if (cpu.reg[i] != ref_r->reg[i]){
-      printf("46 %d %08x, %08x\n", i, cpu.reg[i], ref_r->reg[i]);
+      printf("reg %d %08x, %08x\n", i, cpu.reg[i], ref_r->reg[i]);
       return false;
     }
     else{

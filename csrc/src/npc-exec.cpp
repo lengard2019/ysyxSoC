@@ -35,7 +35,7 @@ NPC_state cpu = {};
 static bool ebreak = false;
 static uint32_t abort_count = 0;
 
-static bool fst_trace_start = true;
+static bool fst_trace_start = false;
 
 uint64_t g_nr_guest_inst = 0;
 uint64_t g_nr_cycle = 0;
@@ -233,7 +233,7 @@ void assert_fail_msg() {
 }
 
 vaddr_t cpu_state(){
-  return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r;
+  return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r;
 }
 
 static void npc_once(){
@@ -241,25 +241,35 @@ static void npc_once(){
 #ifdef CONFIG_NVBOARD
   nvboard_update();
 #endif
-  uint32_t inst_pre = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__inst_r;
+  uint32_t inst_pre = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IDU_ysyx__DOT__instr;
 
   step_and_dump_wave();  // 上升沿
 
-  uint32_t inst_now = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__inst_r;
+  uint32_t inst_now = top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IDU_ysyx__DOT__instr;
 
   IFDEF(CONFIG_DIFFTEST, state_copy());
+
   // state_copy();
-  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__current_state == 1){ // or EXU finish one inst
-    if(difftest_skip_first == true){// 跳过第一次difftest
+  
+  // 下一个时钟上升沿
+  if(difftest_skip_first == true){
+    trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_now);
+    difftest_skip_first = false;
+  }
+
+  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__current_state == 1){ // or EXU finish one inst
+    // if(difftest_skip_first == true){// 跳过第一次difftest
       // IFDEF(CONFIG_DIFFTEST, state_copy());
       // printf("pc = %08x, Next_pc = %08x\n", top->pc, top->Next_pc);
-      trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r, inst_now);
-    }
-    else{
-      difftest_skip_first = true;
-    }
+      // trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_IFU_ysyx__DOT__pc_r, inst_now);
+  //   }
+  //   else{
+  //     difftest_skip_first = true;
+  //   }
+  //   g_nr_guest_inst ++;
+  //   // printf("262 %d\n", g_nr_guest_inst);
+    difftest_skip_first = true;
     g_nr_guest_inst ++;
-    // printf("262 %d\n", g_nr_guest_inst);
   }
   
 
@@ -284,9 +294,9 @@ static void npc_once(){
 
   g_nr_cycle ++ ;
 
-  // if(cpu_state() == 0xa0000370) {
-  //   fst_trace_start = true;
-  // }
+  if(cpu_state() == 0xa0018bd4) {
+    fst_trace_start = true;
+  }
 
   if(abort_count >= 20000){ // 保护
     printf("overtime\n");
