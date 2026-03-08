@@ -281,14 +281,14 @@ static void npc_once(){
   // }
 
 
-  if(inst_pre == inst_now){
-    abort_count ++;
-  }
-  else{
-    int type = type_of_inst();
-    cycle_add(type, abort_count);
-    abort_count = 0;
-  }
+  // if(inst_pre == inst_now){
+  //   abort_count ++;
+  // }
+  // else{
+  //   int type = type_of_inst();
+  //   cycle_add(type, abort_count);
+  //   abort_count = 0;
+  // }
   
   step_and_dump_wave();  // 下降沿
 

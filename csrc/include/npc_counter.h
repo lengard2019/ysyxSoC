@@ -3,9 +3,9 @@
 
 #include <common.h>
 
-void cycle_add(int type, uint32_t num);
+// void cycle_add(int type, uint32_t num);
 
-int type_of_inst();
+// int type_of_inst();
 
 void display_counter();
 
