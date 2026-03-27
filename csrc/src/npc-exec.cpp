@@ -5,10 +5,6 @@
 #include "VysyxSoCFull___024root.h"
 #include "VysyxSoCFull__Dpi.h"
 
-#ifdef CONFIG_NVBOARD
-#include <nvboard.h>
-#endif
-
 #include <mrom.h>
 #include <cpu/ftrace.h>
 #include <npc_counter.h>
@@ -18,6 +14,10 @@
 #include <cpu/difftest.h>
 #include <cpu/iringbuf.h>
 #include "sdb/sdb.h"
+
+#ifdef CONFIG_NVBOARD
+#include <nvboard.h>
+#endif
 
 #ifdef CONFIG_VCD_TRACE
 #include "verilated_vcd_c.h"
@@ -35,7 +35,7 @@ NPC_state cpu = {};
 static bool ebreak = false;
 static uint32_t abort_count = 0;
 
-static bool fst_trace_start = false;
+// static bool fst_trace_start = false;
 
 uint64_t g_nr_guest_inst = 0;
 uint64_t g_nr_cycle = 0;
@@ -64,7 +64,7 @@ VerilatedFstC* tfp = NULL;
 static VysyxSoCFull* top;
 
 #ifdef CONFIG_NVBOARD
-void nvboard_bind_all_pins(VysyxSoCFull* top);
+  void nvboard_bind_all_pins(VysyxSoCFull* top);
 #endif
 
 const char *regs[] = {
@@ -94,9 +94,9 @@ void step_and_dump_wave(){
   // }
 #endif
 #ifdef CONFIG_FST_TRACE
-  if(fst_trace_start == true){
+  // if(fst_trace_start == true){
     tfp->dump(contextp->time()); // 记录波形
-  }
+  // }
     // tfp->dump(contextp->time()); // 记录波形
 #endif
 }
@@ -281,22 +281,20 @@ static void npc_once(){
   // }
 
 
-  // if(inst_pre == inst_now){
-  //   abort_count ++;
-  // }
-  // else{
-  //   int type = type_of_inst();
-  //   cycle_add(type, abort_count);
-  //   abort_count = 0;
-  // }
+  if(inst_pre == inst_now){
+    abort_count ++;
+  }
+  else {
+    abort_count = 0;
+  }
   
   step_and_dump_wave();  // 下降沿
 
   g_nr_cycle ++ ;
 
-  if(cpu_state() == 0xa0018bd4) {
-    fst_trace_start = true;
-  }
+  // if(cpu_state() == 0xa0018bd4) {
+  //   fst_trace_start = true;
+  // }
 
   if(abort_count >= 20000){ // 保护
     printf("overtime\n");
