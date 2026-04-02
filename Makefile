@@ -95,4 +95,7 @@ sta:
 	make -C $(STA_HOME) sta DESIGN=$(DESIGN) SDC_FILE=$(SDC_FILE) CLK_FREQ_MHZ=800 CLK_PORT_NAME=clock \
 		O=$(RESULT_DIR) RTL_FILES=$(RTL_FILE)
 
+clean_sta:
+	-rm -rf sta_result/
+
 .PHONY: verilog clean dev-init

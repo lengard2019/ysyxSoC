@@ -22,10 +22,12 @@ static struct counter {
     uint64_t time_count; 
     uint64_t cycle_count; 
 } counters[] = {
-    {"ifu_delay", 0, 0},
+    {"ifu_delay_block", 0, 0},
+    {"ifu_delay_miss", 0, 0},
     {"lsu_delay", 0, 0},
     {"xbar_delay", 0, 0},
-    {"raw_delay", 0, 0},
+    {"raw_delay_alu", 0, 0},
+    {"raw_delay_load", 0,0},
     {"branch_delay", 0, 0},
 };
 
@@ -41,7 +43,7 @@ extern "C" void cycle_add(int no){
 
 void display_counter(){
 
-    printf("           type |   num    | cycles/inst\n");
+    printf("           type |   num    | cycles/num\n");
 
     for(int i = 0; i < 5; i++){
         if(counters[i].time_count != 0){

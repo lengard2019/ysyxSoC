@@ -163,11 +163,14 @@ static inline int check_reg_idx(int idx) {
 
 word_t get_reg(int idx){
   // return top->rootp->cpu_top__DOT__u_register__DOT__rf[check_reg_idx(idx)];
-  return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_register__DOT__rf[check_reg_idx(idx)];
+  if(idx == 0){
+    return 0;
+  }
+  return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_register__DOT__rf[check_reg_idx(idx - 1)];
 }
 
 void reg_display() {
-  for(int i = 0; i < 16 ; i ++){
+  for(int i = 1; i < 16 ; i ++){
     printf("reg$%s ---> %08x\n",regs[i], top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_register__DOT__rf[i]);
   }
 }
@@ -233,7 +236,7 @@ void assert_fail_msg() {
 }
 
 vaddr_t cpu_state(){
-  return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r;
+  return top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_LSU_ysyx__DOT__Next_pc_r;
 }
 
 static void npc_once(){
@@ -253,11 +256,11 @@ static void npc_once(){
   
   // 下一个时钟上升沿
   if(difftest_skip_first == true){
-    trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__pc_r, inst_now);
+    trace_and_difftest(top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_LSU_ysyx__DOT__Next_pc_r, top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_LSU_ysyx__DOT__Next_pc_r, inst_now);
     difftest_skip_first = false;
   }
 
-  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_WBU_ysyx__DOT__current_state == 1){ // or EXU finish one inst
+  if(top->reset == 0 && top->rootp->ysyxSoCFull__DOT__asic__DOT__cpu__DOT__cpu__DOT__u_LSU_ysyx__DOT__current_state == 6){ // or EXU finish one inst
     // if(difftest_skip_first == true){// 跳过第一次difftest
       // IFDEF(CONFIG_DIFFTEST, state_copy());
       // printf("pc = %08x, Next_pc = %08x\n", top->pc, top->Next_pc);
