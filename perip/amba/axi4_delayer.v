@@ -63,7 +63,7 @@ module axi4_delayer(
   input  [1:0]  out_bresp
 );
 
-  assign in_arready = out_arready;
+  assign in_arready = out_arready; // 地址不用等
   assign out_arvalid = in_arvalid;
   assign out_arid = in_arid;
   assign out_araddr = in_araddr;
@@ -88,14 +88,13 @@ module axi4_delayer(
   assign out_wdata = in_wdata;
   assign out_wstrb = in_wstrb;
   assign out_wlast = in_wlast;
-  // assign out_bready = in_bready;
-  // assign in_bvalid = out_bvalid;
-  // assign in_bid = out_bid;
-  // assign in_bresp = out_bresp;
 
   // read
-  reg   [31:0]    total_read;
-  reg   [31:0]    counter_read;
+  reg   [31:0]    total_read_0;
+  reg   [31:0]    counter_read_0;
+
+  reg   [31:0]    total_read_1;
+  reg   [31:0]    counter_read_1;
 
   // write
   reg   [31:0]    total_wr;
@@ -103,25 +102,31 @@ module axi4_delayer(
 
   localparam  R   = 8;
 
-  localparam  IDLE_READ     = 0;
-  // localparam  WAIT_RDATA    = 1;
-  localparam  BACK_READ     = 1;
+  localparam  IDLE_READ       = 0;
+  localparam  WAIT_OUT_RREADY = 2;
+  localparam  BACK_READ       = 1;
 
-  localparam  IDLE_WR       = 0;
-  localparam  BACK_WR       = 1;
+  localparam  IDLE_READ1      = 0;
+  localparam  WAIT_OUT_RREADY1 = 2;
+  localparam  BACK_READ1      = 1;
+
+  localparam  IDLE_WR         = 0;
+  localparam  WAIT_OUT_BREADY = 2;
+  localparam  BACK_WR         = 1;
 
   reg   [31:0]  latency_read  [7:0];
   reg   [31:0]  fifo_rdata    [7:0];
   reg   [3:0]   fifo_rid      [7:0];
   reg   [0:0]   fifo_rlast    [7:0];
-  reg   [7:0]   read_len;
+
   reg   [2:0]   wpt_r;
   reg   [2:0]   rpt_r;
   reg   [1:0]   current_read;
   reg   [1:0]   next_read;
+  reg   [1:0]   state_rd_1;
   reg   [1:0]   state_wr;
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock) begin
     if(reset) begin
       current_read  <= IDLE_READ;
     end
@@ -131,20 +136,27 @@ module axi4_delayer(
   end
 
   always @(*) begin // rid = 0
-
     case(current_read)
-      
       IDLE_READ: begin // address 
-        if(in_arvalid == 1'b1) begin
-          next_read    = BACK_READ;
+        if(in_arvalid == 1'b1 && in_arid == 4'h0) begin
+          next_read    = WAIT_OUT_RREADY;
         end
         else begin
           next_read    = IDLE_READ;
         end
       end
 
+      WAIT_OUT_RREADY: begin
+        if(out_rlast == 1'b1 && out_rvalid == 1'b1 && out_rid == 4'h0) begin
+          next_read    = BACK_READ;
+        end
+        else begin
+          next_read    = WAIT_OUT_RREADY;
+        end
+      end
+
       BACK_READ: begin
-        if(in_rlast) begin
+        if(in_rlast == 1'b1 && in_rid == 4'h0) begin
           next_read    = IDLE_READ;
         end
         else begin
@@ -158,18 +170,48 @@ module axi4_delayer(
     endcase
   end
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock) begin // rid = 1
     if(reset) begin
-      read_len   <= 8'h00;
+      state_rd_1    <= IDLE_READ1;
     end
     else begin
-      if(in_arvalid == 1'b1 && in_arready == 1'b1) begin
-        read_len   <= in_arlen;
-      end
+      case(state_rd_1)
+
+        IDLE_READ1: begin
+          if(in_arvalid == 1'b1 && in_arid == 4'h1) begin
+            state_rd_1    <= WAIT_OUT_RREADY1;
+          end
+          else begin
+            state_rd_1    <= IDLE_READ1;
+          end 
+        end
+
+        WAIT_OUT_RREADY1: begin
+          if(out_rlast == 1'b1 && out_rvalid == 1'b1 && out_rid == 4'h1) begin
+            state_rd_1    <= BACK_READ1;
+          end
+          else begin
+            state_rd_1    <= WAIT_OUT_RREADY1;
+          end
+        end
+
+        BACK_READ1: begin
+          if(in_rlast == 1'b1 && in_rid == 4'h1) begin
+            state_rd_1    <= IDLE_READ1;
+          end
+          else begin
+            state_rd_1    <= BACK_READ1;
+          end
+        end
+
+        default: begin
+          state_rd_1    <= IDLE_READ1;
+        end
+      endcase
     end
   end
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock) begin
     if(reset) begin
       wpt_r   <= 3'h0;
     end
@@ -177,19 +219,19 @@ module axi4_delayer(
       if(out_rvalid && out_rready) begin
         wpt_r               <= wpt_r + 1;
         fifo_rdata[wpt_r]   <= out_rdata;
-        latency_read[wpt_r] <= total_read;
+        latency_read[wpt_r] <= (out_rid == 4'h0) ? total_read_0 : total_read_1; // 时间
         fifo_rid[wpt_r]     <= out_rid;
         fifo_rlast[wpt_r]   <= out_rlast;
       end
     end
   end
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock) begin
     if(reset) begin
       rpt_r   <= 3'h0;
     end
     else begin
-      if((latency_read[rpt_r] == counter_read) && (counter_read != 0)) begin
+      if((latency_read[rpt_r] <= counter_read) && (state == BACK_READ)) begin
         rpt_r <= rpt_r + 1;
       end
     end
@@ -200,28 +242,69 @@ module axi4_delayer(
       $display("%h, %h", rpt_r, wpt_r);
       assert(0);
     end
-    // assert(rpt_r == wpt_r + 1);
   end
 
-  assign  in_rdata    = fifo_rdata[rpt_r];
-  assign  in_rvalid   = (latency_read[rpt_r] == counter_read) && (counter_read != 0);
-  assign  in_rid      = fifo_rid[rpt_r];
-  assign  in_rlast    = ((latency_read[rpt_r] == counter_read) && (counter_read != 0)) ? fifo_rlast[rpt_r] : 1'b0;
-  assign  out_rready  = (current_read == BACK_READ);
+  wire  [31:0]  counter_read;
+  wire  [1:0]   state;
 
-  always @(posedge clock or posedge reset) begin
+  assign  counter_read  = (fifo_rid[rpt_r] == 4'h0) ? counter_read_0 : counter_read_1;
+  assign  state         = (fifo_rid[rpt_r] == 4'h0) ? current_read : state_rd_1;
+  assign  in_rdata    = fifo_rdata[rpt_r];
+  assign  in_rvalid   = (latency_read[rpt_r] <= counter_read) && (state == BACK_READ);
+  assign  in_rid      = fifo_rid[rpt_r];
+  assign  in_rlast    = ((latency_read[rpt_r] <= counter_read) && (state == BACK_READ)) ? fifo_rlast[rpt_r] : 1'b0;
+  assign  out_rready  = (current_read == WAIT_OUT_RREADY) || (state_rd_1 == WAIT_OUT_RREADY1);
+
+  always @(posedge clock) begin
     if(reset) begin
-      total_read    <= 32'h0;
-      counter_read  <= 32'h0;
+      total_read_0    <= 32'h0;
+      counter_read_0  <= 32'h0;
     end
     else begin
-      if(current_read == BACK_READ) begin
-        total_read     <= total_read + R;
-        counter_read   <= counter_read + 1;
+      if(current_read == WAIT_OUT_RREADY) begin
+        total_read_0     <= total_read_0 + R;
+        counter_read_0   <= counter_read_0 + 1;
+      end
+      else if(current_read == BACK_READ) begin
+        if(counter_read_0 == total_read_0) begin
+          counter_read_0   <= counter_read_0;
+          total_read_0     <= total_read_0;
+        end
+        else begin
+          counter_read_0   <= counter_read_0 + 1;
+          total_read_0     <= total_read_0;
+        end
       end
       else if (current_read == IDLE_READ) begin
-        total_read   <= 32'h0;
-        counter_read <= 32'h0;
+        total_read_0   <= 32'h0;
+        counter_read_0 <= 32'h0;
+      end
+    end
+  end
+
+  always @(posedge clock) begin // rid = 1
+    if(reset) begin
+      total_read_1    <= 32'h0;
+      counter_read_1  <= 32'h0;
+    end
+    else begin
+      if(state_rd_1 == WAIT_OUT_RREADY1) begin
+        total_read_1     <= total_read_1 + R;
+        counter_read_1   <= counter_read_1 + 1;
+      end
+      else if(state_rd_1 == BACK_READ) begin
+        if(counter_read_1 == total_read_1) begin
+          counter_read_1   <= counter_read_1;
+          total_read_1     <= total_read_1;
+        end
+        else begin
+          counter_read_1   <= counter_read_1 + 1;
+          total_read_1     <= total_read_1;
+        end
+      end
+      else if (state_rd_1 == IDLE_READ1) begin
+        total_read_1   <= 32'h0;
+        counter_read_1 <= 32'h0;
       end
     end
   end
@@ -229,9 +312,8 @@ module axi4_delayer(
   reg   [31:0]  latency_wr;
   reg   [1:0]   fifo_bresp;
   reg   [3:0]   fifo_bid;
-  // reg   [0:0]   fifo_wlast;
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock) begin
     if(reset) begin
       state_wr    <= IDLE_WR;
     end 
@@ -239,11 +321,20 @@ module axi4_delayer(
       case(state_wr)
         IDLE_WR: begin
           if(in_awvalid) begin
-            state_wr    <= BACK_WR;
+            state_wr    <= WAIT_OUT_BREADY;
           end
           else begin
             state_wr    <= IDLE_WR;
           end 
+        end
+
+        WAIT_OUT_BREADY: begin
+          if(out_bvalid) begin
+            state_wr    <= BACK_WR;
+          end
+          else begin
+            state_wr    <= WAIT_OUT_BREADY;
+          end
         end
 
         BACK_WR: begin
@@ -263,16 +354,28 @@ module axi4_delayer(
     end
   end
 
-  always @(posedge clock or posedge reset) begin
+  always @(posedge clock) begin
     if(reset) begin
       total_wr    <= 32'h0;
       counter_wr  <= 32'h0;
     end
     else begin
-      if(state_wr == BACK_WR) begin
+      if(state_wr == WAIT_OUT_BREADY) begin
         total_wr     <= total_wr + R;
         counter_wr   <= counter_wr + 1;
       end
+
+      else if(state_wr == BACK_WR) begin
+        if(counter_wr == total_wr) begin
+          total_wr     <= total_wr;
+          counter_wr   <= counter_wr;
+        end
+        else begin
+          total_wr     <= total_wr;
+          counter_wr   <= counter_wr + 1;
+        end
+      end
+
       else if (state_wr == IDLE_WR) begin
         total_wr   <= 32'h0;
         counter_wr <= 32'h0;
@@ -285,15 +388,13 @@ module axi4_delayer(
       fifo_bresp   <= out_bresp;
       latency_wr   <= total_wr;
       fifo_bid     <= out_bid;
-      // fifo_wlast   <= out_wlast;
     end
   end
 
   assign  in_bresp    = fifo_bresp;
   assign  in_bvalid   = (latency_wr == counter_wr) && (counter_wr != 0);
   assign  in_bid      = fifo_bid;
-  // assign  in_wlast    = ((latency_wr == counter_wr) && (counter_wr != 0)) ? fifo_wlast : 1'b0;
-  assign  out_bready  = (state_wr == BACK_WR);
+  assign  out_bready  = (state_wr == WAIT_OUT_BREADY);
 
 
 endmodule

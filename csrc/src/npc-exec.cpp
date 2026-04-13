@@ -35,7 +35,9 @@ NPC_state cpu = {};
 static bool ebreak = false;
 static uint32_t abort_count = 0;
 
-// static bool fst_trace_start = false;
+#ifdef CONFIG_WAVE_TRACE_RIGON
+static bool fst_trace_start = false;
+#endif
 
 uint64_t g_nr_guest_inst = 0;
 uint64_t g_nr_cycle = 0;
@@ -94,10 +96,13 @@ void step_and_dump_wave(){
   // }
 #endif
 #ifdef CONFIG_FST_TRACE
-  // if(fst_trace_start == true){
+#ifdef CONFIG_WAVE_TRACE_RIGON
+  if(fst_trace_start == true){
     tfp->dump(contextp->time()); // 记录波形
-  // }
-    // tfp->dump(contextp->time()); // 记录波形
+  }
+#else
+    tfp->dump(contextp->time()); // 记录波形
+#endif
 #endif
 }
 
@@ -295,9 +300,18 @@ static void npc_once(){
 
   g_nr_cycle ++ ;
 
-  // if(cpu_state() == 0xa0018bd4) {
-  //   fst_trace_start = true;
-  // }
+#ifdef CONFIG_WAVE_TRACE_RIGON
+  if(cpu_state() == CONFIG_TRACE_START) {
+    fst_trace_start = true;
+  }
+
+  if(cpu_state() == CONFIG_TRACE_END) {
+    printf("ABORT: CONFIG_TRACE_END\n");
+    npc_state.state = NPC_ABORT;
+    npc_state.halt_pc = cpu_state();
+    npc_state.halt_ret = get_reg(10);
+  }
+#endif
 
   if(abort_count >= 20000){ // 保护
     printf("overtime\n");

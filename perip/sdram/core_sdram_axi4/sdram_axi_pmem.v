@@ -311,7 +311,7 @@ wire [31:0] addr_w   = ((req_wr_q || req_rd_q) ? req_addr_q:
                         write_active_w ? axi_awaddr_i : axi_araddr_i);
 
 wire wr_w    = write_active_w && axi_wvalid_i;
-wire rd_w    = read_active_w;
+wire rd_w    = read_active_w; 
 
 // RAM if
 assign ram_addr_o       = addr_w;

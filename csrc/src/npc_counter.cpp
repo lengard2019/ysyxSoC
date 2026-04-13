@@ -45,7 +45,7 @@ void display_counter(){
 
     printf("           type |   num    | cycles/num\n");
 
-    for(int i = 0; i < 5; i++){
+    for(int i = 0; i < 7; i++){
         if(counters[i].time_count != 0){
             printf("%15s | %8ld | %ld\n", counters[i].regex, counters[i].time_count, counters[i].cycle_count/counters[i].time_count);
         }
