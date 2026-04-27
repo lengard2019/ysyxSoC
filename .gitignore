@@ -6,7 +6,6 @@ out/
 obj_dir/
 sta_result/
 sdc/
-csrc/include/config.h
 vsrc/
 patch/firtool/
 *.patch

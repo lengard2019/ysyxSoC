@@ -59,7 +59,7 @@ CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 # HEADER := $(wildcard *.h) $(wildcard /home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include/*.h)
 
 YSYXSOC_DEFINE = -Dysyx_25040102_SIM
-YSYXSOC_DEFINE += -Dysyx_25040102_DIFFTEST
+# YSYXSOC_DEFINE += -Dysyx_25040102_DIFFTEST
 YSYXSOC_DEFINE += -Dysyx_25040102_NPC=32\'h30000000
 
 LDFLAGS += -lreadline
