@@ -6,5 +6,7 @@ out/
 obj_dir/
 sta_result/
 sdc/
-vsrc/npc_config.vh
 csrc/include/config.h
+vsrc/
+patch/firtool/
+*.patch

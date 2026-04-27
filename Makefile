@@ -32,17 +32,21 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 FIRTOOL_VERSION = 1.105.0
 FIRTOOL_PATCH_DIR = $(shell pwd)/patch/firtool
 
-VSRCS = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.vh")
+CATSRC = $(shell find $(abspath ./vsrc) -name "*.v" -or -name "*.vh")
+YSYXVSRC = /home/dengzibin/ysyx-workbench/ysyxSoC/build/cpu/ysyx_25040102.v
+VHDIR = $(NPC_HOME)/vsrc
+VSRCS = $(NPC_HOME)/build/ysyx_25040102.v
 VSRCS += $(shell find $(abspath ./perip) -name "*.v")
-VSRCS += $(shell find $(abspath ./build) -name "*.v")
-RTL_FILE = "$(shell find $(abspath ./vsrc) -name "*.v")"
+VSRCS += $(shell find $(abspath ./build) -name "ysyxSoCFull.v")
+RTL_FILE = $(NPC_HOME)/build/ysyx_25040102.v
 CSRCS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCSS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCSS += $(SRC_AUTO_BIND)
+CHEAD = /home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include
 
 SDC_FILE = /home/dengzibin/ysyx-workbench/ysyxSoC/sdc/cpu_top.sdc
 RESULT_DIR = /home/dengzibin/ysyx-workbench/ysyxSoC/sta_result
-DESIGN = cpu_top
+DESIGN = ysyx_25040102
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
@@ -53,6 +57,10 @@ YSYXCFLAGS = $(addprefix -I, $(YSYXC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 
 # HEADER := $(wildcard *.h) $(wildcard /home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include/*.h)
+
+YSYXSOC_DEFINE = -Dysyx_25040102_SIM
+YSYXSOC_DEFINE += -Dysyx_25040102_DIFFTEST
+YSYXSOC_DEFINE += -Dysyx_25040102_NPC=32\'h30000000
 
 LDFLAGS += -lreadline
 
@@ -65,6 +73,7 @@ $(V_FILE_FINAL): $(SCALA_FILES)
 	mv $(V_FILE_GEN) $@
 	sed -i -e 's/_\(aw\|ar\|w\|r\|b\)_\(\|bits_\)/_\1/g' $@
 	sed -i '/firrtl_black_box_resource_files.f/, $$d' $@
+	sed -i 's/ysyx_[0-9]* cpu/ysyx_25040102 cpu/' $@
 
 $(BIN): $(VSRCS) $(CSRCSS) $(NVBOARD_ARCHIVE)
 	@rm -rf $(OBJ_DIR)
@@ -83,7 +92,7 @@ dev-init:
 	cd rocket-chip && git apply ../patch/rocket-chip.patch
 
 run:
-	verilator -Wno-fatal --cc $(VSRCS) -I./vsrc/ --exe $(CSRCS) -LDFLAGS -lreadline -CFLAGS "-I/home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include" \
+	verilator -Wno-fatal --cc $(VSRCS) -I$(VHDIR) $(YSYXSOC_DEFINE) --exe $(CSRCS) -LDFLAGS -lreadline -CFLAGS "-I$(CHEAD)" \
 		--top-module ysyxSoCFull --trace-fst --timescale "1ns/1ns" --autoflush --no-timing +incdir+./perip/uart16550/rtl +incdir+./perip/spi/rtl
 	make -C obj_dir -f VysyxSoCFull.mk VysyxSoCFull
 	./obj_dir/VysyxSoCFull $(ARGS) $(IMG)
@@ -94,6 +103,12 @@ nvboard: $(BIN)
 sta: 
 	make -C $(STA_HOME) sta DESIGN=$(DESIGN) SDC_FILE=$(SDC_FILE) CLK_FREQ_MHZ=800 CLK_PORT_NAME=clock \
 		O=$(RESULT_DIR) RTL_FILES=$(RTL_FILE)
+
+cat: 
+	cat $(CATSRC) > ./build/cpu/ysyx_25040102.v
+
+static_check: 
+	verilator -Wall -Wno-DECLFILENAME -Wno-UNUSEDSIGNAL --lint-only $(YSYXVSRC)
 
 clean_sta:
 	-rm -rf sta_result/
