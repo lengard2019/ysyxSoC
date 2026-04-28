@@ -15,7 +15,7 @@ VERILATOR_CFLAGS += --trace-fst --timescale "1ns/1ns" --autoflush --no-timing  \
 BUILD_DIR = ./build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
-YSYXC_PATH = /home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include
+YSYXC_PATH = ./csrc/include
 
 STA_HOME = /home/dengzibin/yosys-sta
 
@@ -42,10 +42,10 @@ RTL_FILE = $(NPC_HOME)/build/ysyx_25040102.v
 CSRCS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCSS = $(shell find $(abspath ./csrc/src) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 CSRCSS += $(SRC_AUTO_BIND)
-CHEAD = /home/dengzibin/ysyx-workbench/ysyxSoC/csrc/include
+CHEAD = ./csrc/include
 
-SDC_FILE = /home/dengzibin/ysyx-workbench/ysyxSoC/sdc/cpu_top.sdc
-RESULT_DIR = /home/dengzibin/ysyx-workbench/ysyxSoC/sta_result
+SDC_FILE = ./sdc/cpu_top.sdc
+RESULT_DIR = ./sta_result
 DESIGN = ysyx_25040102
 
 # rules for NVBoard
