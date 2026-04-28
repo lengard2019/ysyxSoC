@@ -17,6 +17,8 @@ OBJ_DIR = $(BUILD_DIR)/obj_dir
 BIN = $(BUILD_DIR)/$(TOPNAME)
 YSYXC_PATH = ./csrc/include
 
+NPC_HOME = $(YSYX_HOME)/npc
+
 STA_HOME = /home/dengzibin/yosys-sta
 
 default: $(BIN)
