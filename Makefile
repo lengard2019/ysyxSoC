@@ -45,7 +45,7 @@ CSRCSS += $(SRC_AUTO_BIND)
 CHEAD = $(YSYX_HOME)/ysyxSoC/csrc/include
 
 SDC_FILE = $(YSYX_HOME)/ysyxSoC/sdc/cpu_top.sdc
-RESULT_DIR = $(shell find $(abspath /sta_result))
+RESULT_DIR = $(YSYX_HOME)/ysyxSoC/sta_result
 DESIGN = ysyx_25040102
 
 # rules for NVBoard
