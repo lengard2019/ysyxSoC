@@ -100,7 +100,7 @@ module axi4_delayer(
   reg   [31:0]    total_wr;
   reg   [31:0]    counter_wr;
 
-  localparam  R   = 8;
+  localparam  R   = 4;
 
   localparam  IDLE_READ       = 0;
   localparam  WAIT_OUT_RREADY = 2;
