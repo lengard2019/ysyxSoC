@@ -5,9 +5,9 @@
 
 #define CONFIG_SDRAM  0xa0000000
 #define CONFIG_SDRAM_COL 0x200
-#define CONFIG_SDRAM_ROW 0x2000
+#define CONFIG_SDRAM_ROW 0x4000
 #define CONFIG_BANK 0x4
-#define CONFIG_SDRAM_SIZE 0x4000000
+#define CONFIG_SDRAM_SIZE 0x8000000
 #define PG_ALIGN_S __attribute((aligned(1024)))
 
 #define SDRAM_LEFT  ((paddr_t)CONFIG_SDRAM)

@@ -263,7 +263,7 @@ begin
 			end
 		2'b01 : if(count>0)
 			begin
-        fifo[bottom] <= #1 0;
+        		fifo[bottom] <= #1 0;
 				bottom   <= #1 bottom + 1'b1;
 				count	 <= #1 count - 1'b1;
 			end

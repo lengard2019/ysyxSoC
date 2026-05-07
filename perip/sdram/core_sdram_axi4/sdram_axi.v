@@ -74,7 +74,7 @@ module sdram_axi
     ,output          sdram_cas_o
     ,output          sdram_we_o
     ,output [  3:0]  sdram_dqm_o
-    ,output [ 12:0]  sdram_addr_o
+    ,output [ 13:0]  sdram_addr_o
     ,output [  1:0]  sdram_ba_o
     ,output [ 31:0]  sdram_data_output_o
     ,output          sdram_data_out_en_o
@@ -86,8 +86,8 @@ module sdram_axi
 // Key Params
 //-----------------------------------------------------------------
 parameter SDRAM_MHZ             = 50;
-parameter SDRAM_ADDR_W          = 25;
-parameter SDRAM_COL_W           = 10;
+parameter SDRAM_ADDR_W          = 26;
+parameter SDRAM_COL_W           = 9;
 parameter SDRAM_READ_LATENCY    = 1;
 
 //-----------------------------------------------------------------

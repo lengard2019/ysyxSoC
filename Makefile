@@ -6,11 +6,11 @@ NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR = verilator
-VERILATOR_CFLAGS += -MMD --build -cc -I./vsrc/ \
+VERILATOR_CFLAGS += -MMD --build -cc -I$(VHDIR) $(YSYXSOC_DEFINE) \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 VERILATOR_CFLAGS += --trace-fst --timescale "1ns/1ns" --autoflush --no-timing  \
-					+incdir+./perip/uart16550/rtl +incdir+./perip/spi/rtl
+					+incdir+$(YSYX_HOME)/ysyxSoC/perip/uart16550/rtl +incdir+$(YSYX_HOME)/ysyxSoC/perip/spi/rtl
 
 BUILD_DIR = $(YSYX_HOME)/ysyxSoC/build
 OBJ_DIR = $(BUILD_DIR)/obj_dir
@@ -91,13 +91,13 @@ dev-init:
 	git submodule update --init --recursive
 	cd rocket-chip && git apply ../patch/rocket-chip.patch
 
-run:
-	verilator -Wno-fatal --cc $(VSRCS) -I$(VHDIR) $(YSYXSOC_DEFINE) --exe $(CSRCS) -LDFLAGS -lreadline -CFLAGS "-I$(CHEAD)" \
-		--top-module ysyxSoCFull --trace-fst --timescale "1ns/1ns" --autoflush --no-timing +incdir+./perip/uart16550/rtl +incdir+./perip/spi/rtl
-	make -C obj_dir -f VysyxSoCFull.mk VysyxSoCFull
-	./obj_dir/VysyxSoCFull $(ARGS) $(IMG)
+# run:
+# 	verilator -Wno-fatal --cc $(VSRCS) -I$(VHDIR) $(YSYXSOC_DEFINE) --exe $(CSRCS) -LDFLAGS -lreadline -CFLAGS "-I$(CHEAD)" \
+# 		--top-module ysyxSoCFull --trace-fst --timescale "1ns/1ns" --autoflush --no-timing +incdir+$(YSYX_HOME)/ysyxSoC/perip/uart16550/rtl +incdir+$(YSYX_HOME)/ysyxSoC/perip/spi/rtl
+# 	make -C obj_dir -f VysyxSoCFull.mk VysyxSoCFull
+# 	./obj_dir/VysyxSoCFull $(ARGS) $(IMG)
 
-nvboard: $(BIN)
+run: $(BIN)
 	@$^ $(ARGS) $(IMG)
 
 sta: 

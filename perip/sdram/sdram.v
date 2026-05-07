@@ -5,7 +5,7 @@ module sdram(
   input        ras,
   input        cas,
   input        we,
-  input [12:0] a,
+  input [13:0] a,
   input [ 1:0] ba,
   input [ 3:0] dqm,
   inout [31:0] dq
@@ -22,7 +22,7 @@ module sdram(
   reg   [3:0]     burst_len;
   reg   [2:0]     cas_latency;
 
-  reg   [12:0]    mode_reg;
+  reg   [13:0]    mode_reg;
 
   reg   [31:0]    data;
   wire  [31:0]    data_wr;
@@ -66,7 +66,7 @@ module sdram(
 
   always @(posedge clk or negedge cke) begin
     if(!cke) begin
-      mode_reg  <= 13'h0000;
+      mode_reg  <= 14'h0000;
     end
     else begin
       if(mode == 4'b0000) begin // LOAD MODE REGISTER
@@ -133,16 +133,16 @@ module sdram(
     end
     else if(mode == 4'b0011) begin
       if(ba == 2'b00) begin
-        row_0   <= {3'b000, a};
+        row_0   <= {2'b00, a};
       end
       else if(ba == 2'b01) begin
-        row_1   <= {3'b000, a};
+        row_1   <= {2'b00, a};
       end
       else if(ba == 2'b10) begin
-        row_2   <= {3'b000, a};
+        row_2   <= {2'b00, a};
       end
       else if(ba == 2'b11) begin
-        row_3   <= {3'b000, a};
+        row_3   <= {2'b00, a};
       end
     end
   end
@@ -233,7 +233,7 @@ module sdram(
   // end
 
   assign  bank  = ba;
-  assign  col   = (mode == 4'b0100 || mode == 4'b0101) ? {3'b000, a} : 16'h0000;
+  assign  col   = (mode == 4'b0100 || mode == 4'b0101) ? {2'b00, a} : 16'h0000;
 
   // assign wen = (mode == 4'b0100) ? 1'b1 : 1'b0;
 

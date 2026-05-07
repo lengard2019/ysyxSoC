@@ -15,7 +15,7 @@ static uint32_t sdram[CONFIG_BANK][CONFIG_SDRAM_COL][CONFIG_SDRAM_ROW] PG_ALIGN_
 // static uint16_t sdram_3[CONFIG_BANK][CONFIG_SDRAM_COL][CONFIG_SDRAM_ROW] PG_ALIGN_S = {};
 
 uint32_t sdram_read(uint32_t addr){
-  uint16_t row = (addr & 0x000007FB) >> 2;
+  uint16_t row = (addr & 0x000007FC) >> 2;
   uint16_t bank = (addr & 0x00001800) >> 11;
   uint16_t col = (addr & 0x03FFE) >> 13;
 

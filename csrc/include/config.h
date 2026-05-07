@@ -19,7 +19,7 @@
 // #define CONFIG_TIME 0xa0000070
 // #define CONFIG_WATCHPOINT 1
 // #define CONFIG_FTRACE 1
-// #define CONFIG_NVBOARD 1
+#define CONFIG_NVBOARD 1
 #define CONFIG_COUNTER 1
 #define CONFIG_AMAT 1
 // #define CONFIG_MTRACE_COND 1
