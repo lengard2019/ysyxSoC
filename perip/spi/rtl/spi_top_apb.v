@@ -85,7 +85,7 @@ spi_top u0_spi_top (
   XIP u_xip(
     .clk                (clock      ),
     .reset              (reset      ),
-    .in_paddr           (in_paddr),   
+    .in_paddr           ({in_paddr[31:2], 2'b00}),   
     .in_psel            (in_psel),  
     .in_penable         (in_penable),     
     .in_pprot           (in_pprot),   
