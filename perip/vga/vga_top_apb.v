@@ -21,9 +21,9 @@ module vga_top_apb(
 );
 
   assign  in_pslverr    = 0;
-  assign  in_prdata     = {31'h0, sync};
+  // assign  in_prdata     = {31'h0, sync};
 
-  reg     sync;
+  // reg     sync;
 
   reg [23:0] vga_mem [524287:0];
   wire  draw_finish;
@@ -37,21 +37,21 @@ module vga_top_apb(
     end
   end
 
-  always @(posedge clock) begin
-    if(reset == 1'b1) begin
-      sync    <= 1'b0;
-    end
-    else begin
-      if(in_pwrite == 1'b1 && in_pready == 1'b1 && in_paddr[19:16] == 4'b1000) begin
-        sync    <= 1'b1;
-      end
-      else begin
-        if(draw_finish) begin
-          sync  <= 1'b0;
-        end
-      end
-    end
-  end
+  // always @(posedge clock) begin
+  //   if(reset == 1'b1) begin
+  //     sync    <= 1'b0;
+  //   end
+  //   else begin
+  //     if(in_pwrite == 1'b1 && in_pready == 1'b1 && in_paddr[19:16] == 4'b1000) begin
+  //       sync    <= 1'b1;
+  //     end
+  //     else begin
+  //       if(draw_finish) begin
+  //         sync  <= 1'b0;
+  //       end
+  //     end
+  //   end
+  // end
 
   // output declaration of module vga_ctrl
   // wire  [9:0] h_addr;
@@ -94,7 +94,7 @@ module vga_top_apb(
     .pclk     	  (clock     ),
     .reset    	  (reset     ),
     .vga_data 	  (vga_data  ),
-    .draw_start   (sync       ),
+    // .draw_start   (sync       ),
     .draw_finish  (draw_finish),
     .h_addr   	  (    ),
     .v_addr   	  (    ),
@@ -112,7 +112,7 @@ module vga_ctrl (
     input pclk,
     input reset,
     input [23:0] vga_data,
-    input   draw_start,
+    // input   draw_start,
     output  draw_finish,
     output [9:0] h_addr,
     output [9:0] v_addr,
@@ -145,22 +145,22 @@ always @(posedge pclk) begin
         y_cnt <= 1;
     end
     else begin
-      if(draw_start) begin
+      // if(draw_start) begin
         if(x_cnt == h_total)begin
             x_cnt <= 1;
             if(y_cnt == v_total) y_cnt <= 1;
             else y_cnt <= y_cnt + 1;
         end
         else x_cnt <= x_cnt + 1;
-      end
+      // end
     end
 end
 
 assign  draw_finish = (y_cnt == v_total);
 
   // always @(posedge pclk) begin
-  //   if(valid == 1'b1 && x_cnt != 0) begin
-  //     $display("vga_data = %8h, %8h", vga_data, {h_addr + v_addr});
+  //   if(y_cnt == v_total) begin
+  //     $display("y_cnt == v_total");
   //   end
   // end
 
